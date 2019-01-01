@@ -1,6 +1,7 @@
 package fit
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -151,4 +152,41 @@ func (h Header) String() string {
 		"size: %d | protover: %d | profver: %d | dsize: %d | dtype: %s | crc: 0x%x",
 		h.Size, h.ProtocolVersion, h.ProfileVersion, h.DataSize, h.DataType, h.CRC,
 	)
+}
+
+func (h Header) MarshalBinary() ([]byte, error) {
+	buf := &bytes.Buffer{}
+
+	err := binary.Write(buf, binary.LittleEndian, h.Size)
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buf, binary.LittleEndian, h.ProtocolVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buf, binary.LittleEndian, h.ProfileVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buf, binary.LittleEndian, h.DataSize)
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buf, binary.LittleEndian, h.DataType)
+	if err != nil {
+		return nil, err
+	}
+
+	crc := dyncrc16.Checksum(buf.Bytes())
+	err = binary.Write(buf, binary.LittleEndian, crc)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
