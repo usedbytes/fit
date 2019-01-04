@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"reflect"
 	"time"
 	"unicode/utf8"
 
@@ -53,6 +54,33 @@ func (e *encoder) writeField(value interface{}, t types.Fit) error {
 		binary.Write(e.w, e.arch, value)
 	default:
 		return fmt.Errorf("Unknown Fit type %+v", t)
+	}
+
+	return nil
+}
+
+type encodeFieldDef struct {
+	sindex int // message struct field index
+	num    byte
+	ftype  types.Fit
+}
+
+type encodeMesgDef struct {
+	localMesgNum byte
+	fields       []encodeFieldDef
+}
+
+func (e *encoder) writeMesg(mesg reflect.Value, def *encodeMesgDef) error {
+	hdr := byte(def.localMesgNum & 0xF)
+	binary.Write(e.w, e.arch, hdr)
+
+	for _, f := range def.fields {
+		value := mesg.Field(f.sindex).Interface()
+
+		err := e.writeField(value, f.ftype)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
