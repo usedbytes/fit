@@ -184,22 +184,15 @@ func TestEncodeWriteField(t *testing.T) {
 	}
 }
 
-func TestEncodeWriteMesg(t *testing.T) {
-	type TestMesg struct {
-		Type         byte
-		Timestamp    time.Time
-		PositionLat  Latitude
-		PositionLong Longitude
-	}
+type TestMesg struct {
+	Type         byte
+	Timestamp    time.Time
+	PositionLat  Latitude
+	PositionLong Longitude
+}
 
-	mesg := TestMesg{
-		Type:         0x10,
-		Timestamp:    timeBase.Add(32 * time.Second),
-		PositionLat:  NewLatitudeDegrees(50.2053),
-		PositionLong: NewLongitudeDegrees(0.1218),
-	}
-
-	def := &encodeMesgDef{
+func testMesgDef() *encodeMesgDef {
+	return &encodeMesgDef{
 		localMesgNum: 3,
 		fields: []encodeFieldDef{
 			{
@@ -220,6 +213,17 @@ func TestEncodeWriteMesg(t *testing.T) {
 			},
 		},
 	}
+}
+
+func TestEncodeWriteMesg(t *testing.T) {
+	mesg := TestMesg{
+		Type:         0x10,
+		Timestamp:    timeBase.Add(32 * time.Second),
+		PositionLat:  NewLatitudeDegrees(50.2053),
+		PositionLong: NewLongitudeDegrees(0.1218),
+	}
+
+	def := testMesgDef()
 
 	expect := []byte{
 		0x03,
@@ -242,5 +246,50 @@ func TestEncodeWriteMesg(t *testing.T) {
 
 	if !bytes.Equal(buf.Bytes(), expect) {
 		t.Errorf("Expected '%v', got '%v'", expect, buf.Bytes())
+	}
+}
+
+func TestGetEncodeMesgDef(t *testing.T) {
+	mesg := FileIdMsg{
+		Type:         FileTypeActivity,
+		Manufacturer: ManufacturerDynastream,
+		Product:      uint16(GarminProductEdge25),
+		SerialNumber: 0x00,     // Invalid field, should be skipped
+		TimeCreated:  timeBase, // Invalid field, should be skipped
+		Number:       0xffff,   // Invalid field, should be skipped
+		ProductName:  "product",
+	}
+
+	def := &encodeMesgDef{
+		globalMesgNum: MesgNumFileId,
+		localMesgNum:  2,
+		fields: []encodeFieldDef{
+			{
+				sindex: 0,
+				num:    0,
+				ftype:  types.Fit(0),
+			},
+			{
+				sindex: 1,
+				num:    1,
+				ftype:  types.Fit(4),
+			},
+			{
+				sindex: 2,
+				num:    2,
+				ftype:  types.Fit(4),
+			},
+			{
+				sindex: 6,
+				num:    8,
+				ftype:  types.Fit(7),
+			},
+		},
+	}
+
+	got := getEncodeMesgDef(reflect.ValueOf(mesg), 2)
+
+	if !reflect.DeepEqual(*def, *got) {
+		t.Errorf("Expected '%v', got '%v'", def, got)
 	}
 }
