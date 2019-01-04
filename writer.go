@@ -70,8 +70,9 @@ func (e *encoder) writeField(value interface{}, f *field) error {
 }
 
 type encodeMesgDef struct {
-	localMesgNum byte
-	fields       []*field
+	globalMesgNum MesgNum
+	localMesgNum  byte
+	fields        []*field
 }
 
 func (e *encoder) writeMesg(mesg reflect.Value, def *encodeMesgDef) error {
@@ -85,6 +86,108 @@ func (e *encoder) writeMesg(mesg reflect.Value, def *encodeMesgDef) error {
 		value := mesg.Field(f.sindex).Interface()
 
 		err := e.writeField(value, f)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func profileFieldDef(m MesgNum) [256]*field {
+	return _fields[m]
+}
+
+func getFieldBySindex(index int, fields [256]*field) *field {
+	for _, f := range fields {
+		if f != nil && index == f.sindex {
+			return f
+		}
+	}
+
+	return fields[255]
+}
+
+// getEncodeMesgDef generates an appropriate encodeMesgDef to will encode all
+// of the valid fields in mesg. Any fields which are set to their respective
+// invalid value will be skipped (not present in the returned encodeMesgDef)
+func getEncodeMesgDef(mesg reflect.Value, localMesgNum byte) *encodeMesgDef {
+	mesgNum := getGlobalMesgNum(mesg.Type())
+	allInvalid := getMesgAllInvalid(mesgNum)
+	profileFields := profileFieldDef(mesgNum)
+
+	if mesg.NumField() != allInvalid.NumField() {
+		panic(fmt.Sprintf("Mismatched number of fields in type %+v", mesg.Type()))
+	}
+
+	def := &encodeMesgDef{
+		globalMesgNum: mesgNum,
+		localMesgNum:  localMesgNum,
+		fields:        make([]*field, 0, mesg.NumField()),
+	}
+
+	for i := 0; i < mesg.NumField(); i++ {
+		if mesg.Field(i).Interface() == allInvalid.Field(i).Interface() {
+			// Don't encode invalid values
+			continue
+		}
+
+		// FIXME: No message can exceed 255 bytes
+
+		field := getFieldBySindex(i, profileFields)
+		def.fields = append(def.fields, field)
+	}
+
+	return def
+}
+
+func (e *encoder) writeDefMesg(def *encodeMesgDef) error {
+	hdr := (1 << 6) | def.localMesgNum&0xF
+	err := binary.Write(e.w, e.arch, hdr)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(e.w, e.arch, byte(0))
+	if err != nil {
+		return err
+	}
+
+	switch e.arch {
+	case binary.LittleEndian:
+		err = binary.Write(e.w, e.arch, byte(0))
+	case binary.BigEndian:
+		err = binary.Write(e.w, e.arch, byte(1))
+	}
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(e.w, e.arch, def.globalMesgNum)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(e.w, e.arch, byte(len(def.fields)))
+	if err != nil {
+		return err
+	}
+
+	for _, f := range def.fields {
+		if f.t.Array() {
+			return fmt.Errorf("TODO: Arrays not supported")
+		}
+
+		fdef := fieldDef{
+			num:   f.num,
+			size:  byte(f.t.BaseType().Size()),
+			btype: f.t.BaseType(),
+		}
+		if fdef.btype == types.BaseString {
+			fdef.size = f.length
+		}
+
+		err := binary.Write(e.w, e.arch, fdef)
 		if err != nil {
 			return err
 		}
