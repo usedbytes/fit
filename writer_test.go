@@ -249,8 +249,8 @@ func TestEncodeWriteMesg(t *testing.T) {
 	}
 }
 
-func TestGetEncodeMesgDef(t *testing.T) {
-	mesg := FileIdMsg{
+func testFileIdMsg() FileIdMsg {
+	return FileIdMsg{
 		Type:         FileTypeActivity,
 		Manufacturer: ManufacturerDynastream,
 		Product:      uint16(GarminProductEdge25),
@@ -259,6 +259,10 @@ func TestGetEncodeMesgDef(t *testing.T) {
 		Number:       0xffff,   // Invalid field, should be skipped
 		ProductName:  "product",
 	}
+}
+
+func TestGetEncodeMesgDef(t *testing.T) {
+	mesg := testFileIdMsg()
 
 	def := &encodeMesgDef{
 		globalMesgNum: MesgNumFileId,
@@ -291,5 +295,38 @@ func TestGetEncodeMesgDef(t *testing.T) {
 
 	if !reflect.DeepEqual(*def, *got) {
 		t.Errorf("Expected '%v', got '%v'", def, got)
+	}
+}
+
+func TestWriteDefMesg(t *testing.T) {
+	mesg := testFileIdMsg()
+	def := getEncodeMesgDef(reflect.ValueOf(mesg), 2)
+
+	buf := &bytes.Buffer{}
+
+	e := &encoder{
+		w:    buf,
+		arch: binary.LittleEndian,
+	}
+
+	err := e.writeDefMesg(def)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expect := []byte{
+		(1 << 7) | 2,
+		0,
+		0,
+		byte(MesgNumFileId & 0xFF), byte(MesgNumFileId >> 8),
+		4,
+		0, 1, 0,
+		1, 2, 4,
+		2, 2, 4,
+		8, 1, 7,
+	}
+
+	if !bytes.Equal(buf.Bytes(), expect) {
+		t.Errorf("Expected '%v', got '%v'", expect, buf.Bytes())
 	}
 }

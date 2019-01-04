@@ -152,3 +152,55 @@ func getEncodeMesgDef(mesg reflect.Value, localMesgNum byte) *encodeMesgDef {
 
 	return def
 }
+
+func (e *encoder) writeDefMesg(def *encodeMesgDef) error {
+	hdr := byte((1 << 7) | def.localMesgNum&0xF)
+	err := binary.Write(e.w, e.arch, hdr)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(e.w, e.arch, byte(0))
+	if err != nil {
+		return err
+	}
+
+	switch e.arch {
+	case binary.LittleEndian:
+		err = binary.Write(e.w, e.arch, byte(0))
+	case binary.BigEndian:
+		err = binary.Write(e.w, e.arch, byte(1))
+	}
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(e.w, e.arch, def.globalMesgNum)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(e.w, e.arch, byte(len(def.fields)))
+	if err != nil {
+		return err
+	}
+
+	for _, f := range def.fields {
+		if f.ftype.Array() {
+			return fmt.Errorf("TODO: Arrays not supported")
+		}
+
+		fdef := fieldDef{
+			num:   f.num,
+			size:  byte(f.ftype.BaseType().Size()),
+			btype: f.ftype.BaseType(),
+		}
+
+		err := binary.Write(e.w, e.arch, fdef)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
