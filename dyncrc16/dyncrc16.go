@@ -1,6 +1,11 @@
 // Package dyncrc16 implements the Dynastream CRC-16 checksum.
 package dyncrc16
 
+import (
+	"fmt"
+	"io"
+)
+
 const size = 2
 
 var crcTable = [...]uint16{
@@ -75,4 +80,22 @@ func updateByte(c crc16, data byte) crc16 {
 	d = d ^ tmp ^ crcTable[(data>>4)&0x0F]
 
 	return crc16(d)
+}
+
+type crcWriter struct {
+	Hash16
+	w   io.Writer
+}
+
+func (c *crcWriter) Write(data []byte) (int, error) {
+	c.Hash16.Write(data)
+	fmt.Println(data)
+	return c.w.Write(data)
+}
+
+func NewWriter(w io.Writer) Hash16 {
+	return &crcWriter{
+		Hash16: New(),
+		w: w,
+	}
 }
