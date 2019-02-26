@@ -522,6 +522,7 @@ func (d *decoder) parseDefinitionMessage(recordHeader byte) (*defmsg, error) {
 		fd.num = d.tmp[i*3]
 		fd.size = d.tmp[(i*3)+1]
 		fd.btype = types.DecodeBase(d.tmp[(i*3)+2])
+		fmt.Println("fieldDec:", fd)
 		if err = d.validateFieldDef(dm.globalMsgNum, fd); err != nil {
 			if d.debug {
 				d.opts.logger.Println("illegal definition message:", dm)
@@ -624,6 +625,8 @@ func (d *decoder) validateFieldDef(gmsgnum MesgNum, dfield fieldDef) error {
 }
 
 func (d *decoder) parseDataMessage(recordHeader byte, compressed bool) (reflect.Value, error) {
+
+	fmt.Println("recordHeader", recordHeader)
 	var localMsgNum byte
 	if compressed {
 		localMsgNum = (recordHeader & compressedLocalMesgNumMask) >> 5

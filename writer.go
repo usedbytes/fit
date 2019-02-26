@@ -1,6 +1,7 @@
 package fit
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -121,6 +122,7 @@ func getFieldBySindex(index int, fields [256]*field) *field {
 // invalid value will be skipped (not present in the returned encodeMesgDef)
 func getEncodeMesgDef(mesg reflect.Value, localMesgNum byte) *encodeMesgDef {
 	mesgNum := globalMesgNum(mesg.Type())
+	fmt.Println("mesgDef for", mesgNum, "local", localMesgNum)
 	allInvalid := getMesgAllInvalid(mesgNum)
 	profileFields := profileFieldDef(mesgNum)
 
@@ -153,6 +155,7 @@ func getEncodeMesgDef(mesg reflect.Value, localMesgNum byte) *encodeMesgDef {
 }
 
 func (e *encoder) writeDefMesg(def *encodeMesgDef) error {
+	fmt.Println("writeDefMesg")
 	hdr := byte((1 << 6) | def.localMesgNum&0xF)
 	err := binary.Write(e.w, e.arch, hdr)
 	if err != nil {
@@ -195,7 +198,7 @@ func (e *encoder) writeDefMesg(def *encodeMesgDef) error {
 			btype: f.ftype.BaseType(),
 		}
 
-		fmt.Println(fdef)
+		fmt.Println("fieldDef", fdef)
 
 		err := binary.Write(e.w, e.arch, fdef)
 		if err != nil {
@@ -235,9 +238,10 @@ func (e *encoder) encodeFile(file reflect.Value) error {
 
 	for i := 0; i < deref.NumField(); i++ {
 		v := deref.Field(i)
+		fmt.Println("field", v, deref.Type().Field(i).Name)
 		switch v.Kind() {
 		case reflect.Struct, reflect.Ptr:
-			err := e.encodeDefAndDataMesg(reflect.Indirect(file))
+			err := e.encodeDefAndDataMesg(reflect.Indirect(v))
 			if err != nil {
 				return err
 			}
@@ -267,21 +271,29 @@ func (e *encoder) encodeFile(file reflect.Value) error {
 }
 
 func Encode(w io.Writer, file *File, arch binary.ByteOrder) error {
+	buf := &bytes.Buffer{}
 	enc := &encoder{
-		w: dyncrc16.NewWriter(w),
+		w: dyncrc16.NewWriter(buf),
 		arch: arch,
 	}
 
+		//w: dyncrc16.NewWriter(w),
+
+	/*
+	fmt.Println("Marshal header")
 	hdr, err := file.Header.MarshalBinary()
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("Write header")
 	_, err = enc.w.Write(hdr)
 	if err != nil {
 		return err
 	}
+	*/
 
+	fmt.Println("Write fileID def")
 	enc.encodeDefAndDataMesg(reflect.ValueOf(file.FileId))
 
 	var data reflect.Value
@@ -304,12 +316,21 @@ func Encode(w io.Writer, file *File, arch binary.ByteOrder) error {
 			return err
 		}
 		data = reflect.ValueOf(*settings)
+	case FileTypeCourse:
+		course, err := file.Course()
+		if err != nil {
+			return err
+		}
+		data = reflect.ValueOf(*course)
 	}
 
-	err = enc.encodeFile(data)
+	err := enc.encodeFile(data)
 	if err != nil {
 		return err
 	}
+
+	file.Header.DataSize = uint32(buf.Len())
+	fmt.Println("Datasize", file.Header.DataSize)
 
 	file.CRC = enc.w.(dyncrc16.Hash16).Sum16()
 	err = binary.Write(enc.w, binary.LittleEndian, file.CRC)
@@ -319,6 +340,26 @@ func Encode(w io.Writer, file *File, arch binary.ByteOrder) error {
 
 	if enc.w.(dyncrc16.Hash16).Sum16() != 0 {
 		return fmt.Errorf("CRC error.")
+	}
+
+	fmt.Println("Marshal header")
+	hdr, err := file.Header.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Write header")
+	_, err = w.Write(hdr)
+	if err != nil {
+		return err
+	}
+
+	n, err := buf.WriteTo(w)
+	if err != nil {
+		return err
+	}
+	if n != int64(file.Header.DataSize + 2) {
+		return fmt.Errorf("Unexpected data length %d != %d", n, file.Header.DataSize)
 	}
 
 	return nil

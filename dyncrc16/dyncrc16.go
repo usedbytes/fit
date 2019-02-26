@@ -2,8 +2,8 @@
 package dyncrc16
 
 import (
-	"fmt"
 	"io"
+	"fmt"
 )
 
 const size = 2
