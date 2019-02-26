@@ -238,3 +238,115 @@ func (f *File) SegmentList() (*SegmentListFile, error) {
 	}
 	return f.segmentList, nil
 }
+
+/*
+func (f File) MarshalBinary() ([]byte, error) {
+	hdr, err := f.Header.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+
+	return hdr, err
+}
+
+func globalMesgNum(t reflect.Type) MesgNum {
+	for i, match := range msgsTypes {
+		if t == match {
+			return MesgNum(i)
+		}
+	}
+
+	return MesgNumInvalid
+}
+
+func profileFieldDef(m MesgNum) [256]*field {
+	return _fields[m]
+}
+
+func getFieldBySindex(index int, fields [256]*field) *field {
+	for _, f := range fields {
+		if index == f.sindex {
+			return f
+		}
+	}
+
+	return fields[255]
+}
+
+func definitionMessage(value reflect.Value, arch binary.ByteOrder, localMsgType uint8) *definition {
+	mesgNum := globalMesgNum(value.Type())
+	profileFields := profileFieldDef(mesgNum)
+	allInvalid := getMesgAllInvalid(mesgNum)
+
+	if value.NumField() != allInvalid.NumField() {
+		panic(fmt.Sprintf("Mismatched number of fields in type %+v", value.Type()))
+	}
+
+	def := &definition{
+		msg: defmsg{
+			localMsgType: 0,
+			arch: arch,
+			globalMsgNum: mesgNum,
+			fieldDefs: make([]fieldDef, 0),
+		},
+		fields: make([]*field, value.NumField()),
+	}
+
+	for i := 0; i < value.NumField(); i++ {
+		if value.Field(i).Interface() == allInvalid.Field(i).Interface() {
+			continue
+		}
+
+		field := getFieldBySindex(i, profileFields)
+		fd := fieldDef{
+			num: field.num,
+			size: byte(field.t.BaseType().Size()),
+			btype: field.t.BaseType(),
+		}
+
+		dm.msg.fieldDefs = append(dm.fieldDefs, fd)
+		dm.msg.fields++
+		dm.fields[i] = field
+	}
+
+	return dm
+}
+
+func encodeField(w io.Writer, value interface{}, fdef *fieldDef, arch binary.ByteOrder) error {
+	fmt.Printf("Encode %+v with %+v\n", value, fdef)
+
+	var err error
+	switch fdef.btype.Kind() {
+	case types.TimeUTC, types.TimeLocal:
+		fmt.Println("Don't know how to do time...")
+	default:
+		err = binary.Write(w, arch, value)
+	}
+	return err
+}
+
+func (e *encoder) encodeMesg(w io.Writer, value reflect.Value, def *definition) error {
+	for i := 0; i < value.NumField(); i++ {
+		if field := def.fields[i]; field != nil {
+			err := e.writeField(value.Field(i).Interface(), field)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (f *File) Encode(w io.Writer) error {
+	var e encoder
+	e.w = w
+
+	dm := definitionMessage(reflect.ValueOf(f.FileId), binary.LittleEndian, 0)
+	fmt.Printf("%+v\n", dm)
+	encodeMesg(e.w, reflect.ValueOf(f.FileId), dm)
+
+
+	return nil
+}
+*/

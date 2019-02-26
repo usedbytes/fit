@@ -323,6 +323,11 @@ type defmsg struct {
 	fieldDefs    []fieldDef
 }
 
+type encodeDefmsg struct {
+	defmsg
+	structFieldMap map[int]*fieldDef
+}
+
 func (dm defmsg) String() string {
 	return fmt.Sprintf(
 		"local: %d | global: %v | arch: %v | fields: %d",

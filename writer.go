@@ -8,14 +8,13 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/tormoder/fit/dyncrc16"
 	"github.com/tormoder/fit/internal/types"
 )
 
 type encoder struct {
 	w    io.Writer
 	arch binary.ByteOrder
-
-	localMesgNum byte
 }
 
 func encodeString(str string) ([]byte, error) {
@@ -136,7 +135,7 @@ func getEncodeMesgDef(mesg reflect.Value, localMesgNum byte) *encodeMesgDef {
 	}
 
 	for i := 0; i < mesg.NumField(); i++ {
-		if mesg.Field(i).Interface() == allInvalid.Field(i).Interface() {
+		if mesg.Field(i).Kind() == reflect.Slice || mesg.Field(i).Interface() == allInvalid.Field(i).Interface() {
 			// Don't encode invalid values
 			continue
 		}
@@ -154,7 +153,7 @@ func getEncodeMesgDef(mesg reflect.Value, localMesgNum byte) *encodeMesgDef {
 }
 
 func (e *encoder) writeDefMesg(def *encodeMesgDef) error {
-	hdr := byte((1 << 7) | def.localMesgNum&0xF)
+	hdr := byte((1 << 6) | def.localMesgNum&0xF)
 	err := binary.Write(e.w, e.arch, hdr)
 	if err != nil {
 		return err
@@ -196,10 +195,130 @@ func (e *encoder) writeDefMesg(def *encodeMesgDef) error {
 			btype: f.ftype.BaseType(),
 		}
 
+		fmt.Println(fdef)
+
 		err := binary.Write(e.w, e.arch, fdef)
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (e *encoder) encodeDefAndDataMesg(mesg reflect.Value) error {
+	// We'll always just use local ID 0, for simplicity
+	// We know the full file contents up-front, so no need to interleave
+	def := getEncodeMesgDef(mesg, 0)
+
+	err := e.writeDefMesg(def)
+	if err != nil {
+		return err
+	}
+
+	err = e.writeMesg(mesg, def)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func (e *encoder) encodeFile(file reflect.Value) error {
+	/*
+	deref := reflect.Indirect(file)
+	if deref == file {
+		return fmt.Errorf("Indirect failure")
+	}
+	*/
+	deref := file
+
+	for i := 0; i < deref.NumField(); i++ {
+		v := deref.Field(i)
+		switch v.Kind() {
+		case reflect.Struct, reflect.Ptr:
+			err := e.encodeDefAndDataMesg(reflect.Indirect(file))
+			if err != nil {
+				return err
+			}
+		case reflect.Slice:
+			var def *encodeMesgDef
+			for j := 0; j < v.Len(); j++ {
+				v2 := reflect.Indirect(v.Index(j))
+
+				if j == 0 {
+					def = getEncodeMesgDef(v2, 0)
+					err := e.writeDefMesg(def)
+					if err != nil {
+						return err
+					}
+				}
+
+				err := e.writeMesg(v2, def)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+
+	return nil
+}
+
+func Encode(w io.Writer, file *File, arch binary.ByteOrder) error {
+	enc := &encoder{
+		w: dyncrc16.NewWriter(w),
+		arch: arch,
+	}
+
+	hdr, err := file.Header.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	_, err = enc.w.Write(hdr)
+	if err != nil {
+		return err
+	}
+
+	enc.encodeDefAndDataMesg(reflect.ValueOf(file.FileId))
+
+	var data reflect.Value
+	switch file.Type() {
+	case FileTypeActivity:
+		activity, err := file.Activity()
+		if err != nil {
+			return err
+		}
+		data = reflect.ValueOf(*activity)
+	case FileTypeDevice:
+		device, err := file.Device()
+		if err != nil {
+			return err
+		}
+		data = reflect.ValueOf(*device)
+	case FileTypeSettings:
+		settings, err := file.Settings()
+		if err != nil {
+			return err
+		}
+		data = reflect.ValueOf(*settings)
+	}
+
+	err = enc.encodeFile(data)
+	if err != nil {
+		return err
+	}
+
+	file.CRC = enc.w.(dyncrc16.Hash16).Sum16()
+	err = binary.Write(enc.w, binary.LittleEndian, file.CRC)
+	if err != nil {
+		return err
+	}
+
+	if enc.w.(dyncrc16.Hash16).Sum16() != 0 {
+		return fmt.Errorf("CRC error.")
 	}
 
 	return nil
