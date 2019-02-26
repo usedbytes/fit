@@ -182,10 +182,12 @@ func (h Header) MarshalBinary() ([]byte, error) {
 		return nil, err
 	}
 
-	crc := dyncrc16.Checksum(buf.Bytes())
-	err = binary.Write(buf, binary.LittleEndian, crc)
-	if err != nil {
-		return nil, err
+	if h.Size == 14 {
+		crc := dyncrc16.Checksum(buf.Bytes())
+		err = binary.Write(buf, binary.LittleEndian, crc)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return buf.Bytes(), nil
