@@ -18,16 +18,22 @@ type encoder struct {
 	arch binary.ByteOrder
 }
 
-func encodeString(str string) ([]byte, error) {
-	bstr := append([]byte(str), '\000')
+func encodeString(str string, size byte) ([]byte, error) {
+	length := len(str)
+	if length > int(size) - 1 {
+		length = int(size) - 1;
+	}
+
+	bstr := make([]byte, size)
+	copy(bstr, str[:length])
 	if !utf8.Valid(bstr) {
 		return nil, fmt.Errorf("Can't encode %+v as UTF-8 string", str)
 	}
 	return bstr, nil
 }
 
-func (e *encoder) writeField(value interface{}, t types.Fit) error {
-	switch t.Kind() {
+func (e *encoder) writeField(value interface{}, f encodeFieldDef) error {
+	switch f.ftype.Kind() {
 	case types.TimeUTC:
 		t := value.(time.Time)
 		u32 := encodeTime(t)
@@ -41,21 +47,21 @@ func (e *encoder) writeField(value interface{}, t types.Fit) error {
 		lng := value.(Longitude)
 		binary.Write(e.w, e.arch, lng.semicircles)
 	case types.NativeFit:
-		if t.BaseType() == types.BaseString {
+		if f.ftype.BaseType() == types.BaseString {
 			str, ok := value.(string)
 			if !ok {
 				return fmt.Errorf("Not a string: %+v", value)
 			}
 
 			var err error
-			value, err = encodeString(str)
+			value, err = encodeString(str, f.size)
 			if err != nil {
 				return fmt.Errorf("Can't encode %+v as UTF-8 string: %v", value, err)
 			}
 		}
 		binary.Write(e.w, e.arch, value)
 	default:
-		return fmt.Errorf("Unknown Fit type %+v", t)
+		return fmt.Errorf("Unknown Fit type %+v", f.ftype)
 	}
 
 	return nil
@@ -65,6 +71,7 @@ type encodeFieldDef struct {
 	sindex int // message struct field index
 	num    byte
 	ftype  types.Fit
+	size   byte // for strings, this isn't ftype.BaseType().Size()
 }
 
 type encodeMesgDef struct {
@@ -83,7 +90,7 @@ func (e *encoder) writeMesg(mesg reflect.Value, def *encodeMesgDef) error {
 	for _, f := range def.fields {
 		value := mesg.Field(f.sindex).Interface()
 
-		err := e.writeField(value, f.ftype)
+		err := e.writeField(value, f)
 		if err != nil {
 			return err
 		}
@@ -142,12 +149,22 @@ func getEncodeMesgDef(mesg reflect.Value, localMesgNum byte) *encodeMesgDef {
 			continue
 		}
 
+		// FIXME: No message can exceed 255 bytes
 		field := getFieldBySindex(i, profileFields)
+
+		size := field.t.BaseType().Size()
+		if field.t.BaseType() == types.BaseString {
+			size = mesg.Field(i).Len() + 1
+			if size > 255 {
+				size = 255
+			}
+		}
 
 		def.fields = append(def.fields, encodeFieldDef{
 			sindex: i,
 			num:    field.num,
 			ftype:  field.t,
+			size:   byte(size),
 		})
 	}
 
@@ -194,7 +211,7 @@ func (e *encoder) writeDefMesg(def *encodeMesgDef) error {
 
 		fdef := fieldDef{
 			num:   f.num,
-			size:  byte(f.ftype.BaseType().Size()),
+			size:  f.size,
 			btype: f.ftype.BaseType(),
 		}
 
