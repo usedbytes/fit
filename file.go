@@ -2,6 +2,7 @@ package fit
 
 import (
 	"fmt"
+	"time"
 	"reflect"
 )
 
@@ -71,6 +72,64 @@ func (f *File) add(msg reflect.Value) {
 	default:
 		f.msgAdder.add(msg)
 	}
+}
+
+func InitMesg(i interface{}) error {
+	pv := reflect.ValueOf(i)
+	v := reflect.Indirect(pv)
+	if pv.IsNil() || v == pv {
+		return fmt.Errorf("Argument must be pointer to a Msg")
+	}
+
+	mesgNum := globalMesgNum(v.Type())
+	if mesgNum == MesgNumInvalid {
+		return fmt.Errorf("Unknown message type %v", v.Type())
+	}
+
+	v.Set(getMesgAllInvalid(mesgNum))
+
+	return nil
+}
+
+func New(fileType FileType) *File {
+	file := &File{
+		Header: Header{
+			Size: 14,
+			ProtocolVersion: byte((2 << 4) | 3),
+			ProfileVersion: ProfileMajorVersion * 100 + ProfileMinorVersion,
+			DataType: [4]byte{'.', 'F', 'I', 'T'},
+		},
+	}
+
+	err := InitMesg(&file.FileId)
+	if err != nil {
+		return nil
+	}
+	file.FileId.Type = fileType
+	file.FileId.Manufacturer = ManufacturerGarmin
+	file.FileId.Product = uint16(GarminProductEdge25)
+	file.FileId.SerialNumber = uint32(0x1234567)
+	file.FileId.TimeCreated = time.Now()
+	file.FileId.SerialNumber = uint32(file.FileId.TimeCreated.Unix() - 1546300800)
+
+	err = file.init()
+	if err != nil {
+		return nil
+	}
+
+	return file
+}
+
+func (f *File) Add(mesg interface{}) error {
+	pv := reflect.ValueOf(mesg)
+	v := reflect.Indirect(pv)
+	if pv.IsNil() || v == pv {
+		return fmt.Errorf("Argument must be pointer to a Msg")
+	}
+
+	f.add(v)
+
+	return nil
 }
 
 func (f *File) init() error {
