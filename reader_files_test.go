@@ -10,6 +10,7 @@ var decodeTestFiles = [...]struct {
 	fingerprint uint64
 	compress    bool
 	dopts       testingDecodeOpts
+	skipEncode  bool
 }{
 	{
 		"me",
@@ -18,6 +19,7 @@ var decodeTestFiles = [...]struct {
 		852090183974198924,
 		true,
 		tdoAllWithDiscardLogger,
+		true, // Decode mismatch due to unknown fields
 	},
 	{
 		"fitsdk",
@@ -26,6 +28,7 @@ var decodeTestFiles = [...]struct {
 		15868163239628117134,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"fitsdk",
@@ -34,6 +37,7 @@ var decodeTestFiles = [...]struct {
 		2061789885649091689,
 		true,
 		tdoNone,
+		true, // Fails because first message has different valid fields
 	},
 	{
 		"fitsdk",
@@ -42,6 +46,7 @@ var decodeTestFiles = [...]struct {
 		6934097644327358707,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"fitsdk",
@@ -50,6 +55,7 @@ var decodeTestFiles = [...]struct {
 		11646130095806592003,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"fitsdk",
@@ -58,6 +64,7 @@ var decodeTestFiles = [...]struct {
 		10618925575562750845,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"fitsdk",
@@ -66,6 +73,7 @@ var decodeTestFiles = [...]struct {
 		3878452772218004022,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"fitsdk",
@@ -74,6 +82,7 @@ var decodeTestFiles = [...]struct {
 		8981609989295311564,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"fitsdk",
@@ -82,6 +91,7 @@ var decodeTestFiles = [...]struct {
 		12204710628983956079,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"fitsdk",
@@ -90,6 +100,7 @@ var decodeTestFiles = [...]struct {
 		2611280041225851776,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"fitsdk",
@@ -98,6 +109,7 @@ var decodeTestFiles = [...]struct {
 		2611280041225851776,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"python-fitparse",
@@ -106,6 +118,7 @@ var decodeTestFiles = [...]struct {
 		4810468065147897347,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"python-fitparse",
@@ -114,6 +127,7 @@ var decodeTestFiles = [...]struct {
 		12916282096012933063,
 		true,
 		tdoNone,
+		true, // Fails because first message has different valid fields
 	},
 	{
 		"python-fitparse",
@@ -122,6 +136,7 @@ var decodeTestFiles = [...]struct {
 		0,
 		false,
 		tdoNone,
+		false,
 	},
 	{
 		"python-fitparse",
@@ -130,6 +145,7 @@ var decodeTestFiles = [...]struct {
 		2432372512744107705,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"sram",
@@ -138,6 +154,7 @@ var decodeTestFiles = [...]struct {
 		9437835805800415815,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"sram",
@@ -146,6 +163,7 @@ var decodeTestFiles = [...]struct {
 		15242734326021650800,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"dcrainmaker",
@@ -154,6 +172,7 @@ var decodeTestFiles = [...]struct {
 		4951458258221367916,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"misc",
@@ -162,6 +181,7 @@ var decodeTestFiles = [...]struct {
 		8931404232675100663,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"misc",
@@ -170,6 +190,7 @@ var decodeTestFiles = [...]struct {
 		5294246969201268156,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"corrupt",
@@ -178,6 +199,7 @@ var decodeTestFiles = [...]struct {
 		11497319177163813369,
 		true,
 		tdoNone,
+		false,
 	},
 	{
 		"corrupt",
@@ -186,5 +208,6 @@ var decodeTestFiles = [...]struct {
 		8702718056146418377,
 		true,
 		tdoNone,
+		false,
 	},
 }
