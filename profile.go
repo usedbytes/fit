@@ -1,6 +1,6 @@
 // Code generated using the program found in 'cmd/fitgen/main.go'. DO NOT EDIT.
 
-// SDK Version: 20.43
+// SDK Version: 20.88
 
 package fit
 
@@ -15,7 +15,7 @@ const (
 	ProfileMajorVersion = 20
 
 	// ProfileMinorVersion is the current supported profile minor version of the FIT SDK.
-	ProfileMinorVersion = 43
+	ProfileMinorVersion = 88
 )
 
 var knownMsgNums = map[MesgNum]bool{
@@ -94,6 +94,15 @@ var knownMsgNums = map[MesgNum]bool{
 	MesgNumFieldDescription:            true,
 	MesgNumDeveloperDataId:             true,
 	MesgNumMagnetometerData:            true,
+	MesgNumBarometerData:               true,
+	MesgNumOneDSensorCalibration:       true,
+	MesgNumSet:                         true,
+	MesgNumStressLevel:                 true,
+	MesgNumDiveSettings:                true,
+	MesgNumDiveGas:                     true,
+	MesgNumDiveAlarm:                   true,
+	MesgNumExerciseTitle:               true,
+	MesgNumDiveSummary:                 true,
 }
 
 var (
@@ -330,6 +339,16 @@ var _fields = [...][256]*field{
 		2:   {2, 2, types.Fit(4), 1},
 		3:   {3, 3, types.Fit(2), 1},
 	},
+
+	MesgNumDiveSettings: {
+		0:  {0, 0, types.Fit(7), 16},
+		19: {1, 19, types.Fit(0), 1},
+		20: {2, 20, types.Fit(2), 1},
+	},
+
+	MesgNumDiveAlarm: {},
+
+	MesgNumDiveGas: {},
 
 	MesgNumGoal: {
 		254: {0, 254, types.Fit(4), 1},
@@ -696,7 +715,11 @@ var _fields = [...][256]*field{
 
 	MesgNumMagnetometerData: {},
 
+	MesgNumBarometerData: {},
+
 	MesgNumThreeDSensorCalibration: {},
+
+	MesgNumOneDSensorCalibration: {},
 
 	MesgNumVideoFrame: {},
 
@@ -738,6 +761,10 @@ var _fields = [...][256]*field{
 	},
 
 	MesgNumVideoClip: {},
+
+	MesgNumSet: {
+		9: {0, 9, types.Fit(4), 1},
+	},
 
 	MesgNumCourse: {
 		4: {0, 4, types.Fit(0), 1},
@@ -905,6 +932,14 @@ var _fields = [...][256]*field{
 		7:   {8, 7, types.Fit(0), 1},
 		8:   {9, 8, types.Fit(7), 50},
 		9:   {10, 9, types.Fit(0), 1},
+		10:  {11, 10, types.Fit(4), 1},
+	},
+
+	MesgNumExerciseTitle: {
+		254: {0, 254, types.Fit(4), 1},
+		0:   {1, 0, types.Fit(4), 1},
+		1:   {2, 1, types.Fit(4), 1},
+		2:   {3, 2, types.Fit(39), 200},
 	},
 
 	MesgNumSchedule: {
@@ -988,6 +1023,8 @@ var _fields = [...][256]*field{
 		10:  {5, 10, types.Fit(45), 1},
 	},
 
+	MesgNumStressLevel: {},
+
 	MesgNumMemoGlob: {},
 
 	MesgNumAntChannelId: {},
@@ -1060,6 +1097,8 @@ var _fields = [...][256]*field{
 		3: {3, 3, types.Fit(2), 1},
 		4: {4, 4, types.Fit(6), 1},
 	},
+
+	MesgNumDiveSummary: {},
 }
 
 func getField(gmn MesgNum, fdn byte) (*field, bool) {
@@ -1098,6 +1137,9 @@ var msgsTypes = [...]reflect.Type{
 	MesgNumCadenceZone:                 reflect.TypeOf(CadenceZoneMsg{}),
 	MesgNumPowerZone:                   reflect.TypeOf(PowerZoneMsg{}),
 	MesgNumMetZone:                     reflect.TypeOf(MetZoneMsg{}),
+	MesgNumDiveSettings:                reflect.TypeOf(DiveSettingsMsg{}),
+	MesgNumDiveAlarm:                   reflect.TypeOf(DiveAlarmMsg{}),
+	MesgNumDiveGas:                     reflect.TypeOf(DiveGasMsg{}),
 	MesgNumGoal:                        reflect.TypeOf(GoalMsg{}),
 	MesgNumActivity:                    reflect.TypeOf(ActivityMsg{}),
 	MesgNumSession:                     reflect.TypeOf(SessionMsg{}),
@@ -1115,7 +1157,9 @@ var msgsTypes = [...]reflect.Type{
 	MesgNumGyroscopeData:               reflect.TypeOf(GyroscopeDataMsg{}),
 	MesgNumAccelerometerData:           reflect.TypeOf(AccelerometerDataMsg{}),
 	MesgNumMagnetometerData:            reflect.TypeOf(MagnetometerDataMsg{}),
+	MesgNumBarometerData:               reflect.TypeOf(BarometerDataMsg{}),
 	MesgNumThreeDSensorCalibration:     reflect.TypeOf(ThreeDSensorCalibrationMsg{}),
+	MesgNumOneDSensorCalibration:       reflect.TypeOf(OneDSensorCalibrationMsg{}),
 	MesgNumVideoFrame:                  reflect.TypeOf(VideoFrameMsg{}),
 	MesgNumObdiiData:                   reflect.TypeOf(ObdiiDataMsg{}),
 	MesgNumNmeaSentence:                reflect.TypeOf(NmeaSentenceMsg{}),
@@ -1124,6 +1168,7 @@ var msgsTypes = [...]reflect.Type{
 	MesgNumVideoTitle:                  reflect.TypeOf(VideoTitleMsg{}),
 	MesgNumVideoDescription:            reflect.TypeOf(VideoDescriptionMsg{}),
 	MesgNumVideoClip:                   reflect.TypeOf(VideoClipMsg{}),
+	MesgNumSet:                         reflect.TypeOf(SetMsg{}),
 	MesgNumCourse:                      reflect.TypeOf(CourseMsg{}),
 	MesgNumCoursePoint:                 reflect.TypeOf(CoursePointMsg{}),
 	MesgNumSegmentId:                   reflect.TypeOf(SegmentIdMsg{}),
@@ -1134,6 +1179,7 @@ var msgsTypes = [...]reflect.Type{
 	MesgNumWorkout:                     reflect.TypeOf(WorkoutMsg{}),
 	MesgNumWorkoutSession:              reflect.TypeOf(WorkoutSessionMsg{}),
 	MesgNumWorkoutStep:                 reflect.TypeOf(WorkoutStepMsg{}),
+	MesgNumExerciseTitle:               reflect.TypeOf(ExerciseTitleMsg{}),
 	MesgNumSchedule:                    reflect.TypeOf(ScheduleMsg{}),
 	MesgNumTotals:                      reflect.TypeOf(TotalsMsg{}),
 	MesgNumWeightScale:                 reflect.TypeOf(WeightScaleMsg{}),
@@ -1141,6 +1187,7 @@ var msgsTypes = [...]reflect.Type{
 	MesgNumMonitoringInfo:              reflect.TypeOf(MonitoringInfoMsg{}),
 	MesgNumMonitoring:                  reflect.TypeOf(MonitoringMsg{}),
 	MesgNumHr:                          reflect.TypeOf(HrMsg{}),
+	MesgNumStressLevel:                 reflect.TypeOf(StressLevelMsg{}),
 	MesgNumMemoGlob:                    reflect.TypeOf(MemoGlobMsg{}),
 	MesgNumAntChannelId:                reflect.TypeOf(AntChannelIdMsg{}),
 	MesgNumAntRx:                       reflect.TypeOf(AntRxMsg{}),
@@ -1150,6 +1197,7 @@ var msgsTypes = [...]reflect.Type{
 	MesgNumExdDataConceptConfiguration: reflect.TypeOf(ExdDataConceptConfigurationMsg{}),
 	MesgNumFieldDescription:            reflect.TypeOf(FieldDescriptionMsg{}),
 	MesgNumDeveloperDataId:             reflect.TypeOf(DeveloperDataIdMsg{}),
+	MesgNumDiveSummary:                 reflect.TypeOf(DiveSummaryMsg{}),
 }
 
 func getGlobalMesgNum(t reflect.Type) MesgNum {
@@ -1188,6 +1236,9 @@ var newMesgFuncs = [...]newMesgFunc{
 	MesgNumCadenceZone:                 func() reflect.Value { return reflect.ValueOf(NewCadenceZoneMsg()) },
 	MesgNumPowerZone:                   func() reflect.Value { return reflect.ValueOf(NewPowerZoneMsg()) },
 	MesgNumMetZone:                     func() reflect.Value { return reflect.ValueOf(NewMetZoneMsg()) },
+	MesgNumDiveSettings:                func() reflect.Value { return reflect.ValueOf(NewDiveSettingsMsg()) },
+	MesgNumDiveAlarm:                   func() reflect.Value { return reflect.ValueOf(NewDiveAlarmMsg()) },
+	MesgNumDiveGas:                     func() reflect.Value { return reflect.ValueOf(NewDiveGasMsg()) },
 	MesgNumGoal:                        func() reflect.Value { return reflect.ValueOf(NewGoalMsg()) },
 	MesgNumActivity:                    func() reflect.Value { return reflect.ValueOf(NewActivityMsg()) },
 	MesgNumSession:                     func() reflect.Value { return reflect.ValueOf(NewSessionMsg()) },
@@ -1205,7 +1256,9 @@ var newMesgFuncs = [...]newMesgFunc{
 	MesgNumGyroscopeData:               func() reflect.Value { return reflect.ValueOf(NewGyroscopeDataMsg()) },
 	MesgNumAccelerometerData:           func() reflect.Value { return reflect.ValueOf(NewAccelerometerDataMsg()) },
 	MesgNumMagnetometerData:            func() reflect.Value { return reflect.ValueOf(NewMagnetometerDataMsg()) },
+	MesgNumBarometerData:               func() reflect.Value { return reflect.ValueOf(NewBarometerDataMsg()) },
 	MesgNumThreeDSensorCalibration:     func() reflect.Value { return reflect.ValueOf(NewThreeDSensorCalibrationMsg()) },
+	MesgNumOneDSensorCalibration:       func() reflect.Value { return reflect.ValueOf(NewOneDSensorCalibrationMsg()) },
 	MesgNumVideoFrame:                  func() reflect.Value { return reflect.ValueOf(NewVideoFrameMsg()) },
 	MesgNumObdiiData:                   func() reflect.Value { return reflect.ValueOf(NewObdiiDataMsg()) },
 	MesgNumNmeaSentence:                func() reflect.Value { return reflect.ValueOf(NewNmeaSentenceMsg()) },
@@ -1214,6 +1267,7 @@ var newMesgFuncs = [...]newMesgFunc{
 	MesgNumVideoTitle:                  func() reflect.Value { return reflect.ValueOf(NewVideoTitleMsg()) },
 	MesgNumVideoDescription:            func() reflect.Value { return reflect.ValueOf(NewVideoDescriptionMsg()) },
 	MesgNumVideoClip:                   func() reflect.Value { return reflect.ValueOf(NewVideoClipMsg()) },
+	MesgNumSet:                         func() reflect.Value { return reflect.ValueOf(NewSetMsg()) },
 	MesgNumCourse:                      func() reflect.Value { return reflect.ValueOf(NewCourseMsg()) },
 	MesgNumCoursePoint:                 func() reflect.Value { return reflect.ValueOf(NewCoursePointMsg()) },
 	MesgNumSegmentId:                   func() reflect.Value { return reflect.ValueOf(NewSegmentIdMsg()) },
@@ -1224,6 +1278,7 @@ var newMesgFuncs = [...]newMesgFunc{
 	MesgNumWorkout:                     func() reflect.Value { return reflect.ValueOf(NewWorkoutMsg()) },
 	MesgNumWorkoutSession:              func() reflect.Value { return reflect.ValueOf(NewWorkoutSessionMsg()) },
 	MesgNumWorkoutStep:                 func() reflect.Value { return reflect.ValueOf(NewWorkoutStepMsg()) },
+	MesgNumExerciseTitle:               func() reflect.Value { return reflect.ValueOf(NewExerciseTitleMsg()) },
 	MesgNumSchedule:                    func() reflect.Value { return reflect.ValueOf(NewScheduleMsg()) },
 	MesgNumTotals:                      func() reflect.Value { return reflect.ValueOf(NewTotalsMsg()) },
 	MesgNumWeightScale:                 func() reflect.Value { return reflect.ValueOf(NewWeightScaleMsg()) },
@@ -1231,6 +1286,7 @@ var newMesgFuncs = [...]newMesgFunc{
 	MesgNumMonitoringInfo:              func() reflect.Value { return reflect.ValueOf(NewMonitoringInfoMsg()) },
 	MesgNumMonitoring:                  func() reflect.Value { return reflect.ValueOf(NewMonitoringMsg()) },
 	MesgNumHr:                          func() reflect.Value { return reflect.ValueOf(NewHrMsg()) },
+	MesgNumStressLevel:                 func() reflect.Value { return reflect.ValueOf(NewStressLevelMsg()) },
 	MesgNumMemoGlob:                    func() reflect.Value { return reflect.ValueOf(NewMemoGlobMsg()) },
 	MesgNumAntChannelId:                func() reflect.Value { return reflect.ValueOf(NewAntChannelIdMsg()) },
 	MesgNumAntRx:                       func() reflect.Value { return reflect.ValueOf(NewAntRxMsg()) },
@@ -1240,6 +1296,7 @@ var newMesgFuncs = [...]newMesgFunc{
 	MesgNumExdDataConceptConfiguration: func() reflect.Value { return reflect.ValueOf(NewExdDataConceptConfigurationMsg()) },
 	MesgNumFieldDescription:            func() reflect.Value { return reflect.ValueOf(NewFieldDescriptionMsg()) },
 	MesgNumDeveloperDataId:             func() reflect.Value { return reflect.ValueOf(NewDeveloperDataIdMsg()) },
+	MesgNumDiveSummary:                 func() reflect.Value { return reflect.ValueOf(NewDiveSummaryMsg()) },
 }
 
 func getMesgAllInvalid(mn MesgNum) reflect.Value {

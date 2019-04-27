@@ -1,6 +1,6 @@
 // Code generated using the program found in 'cmd/fitgen/main.go'. DO NOT EDIT.
 
-// SDK Version: 20.43
+// SDK Version: 20.88
 
 package fit
 
@@ -814,6 +814,58 @@ func (x *MetZoneMsg) GetFatCaloriesScaled() float64 {
 		return math.NaN()
 	}
 	return float64(x.FatCalories) / 10
+}
+
+// DiveSettingsMsg represents the dive_settings FIT message type.
+type DiveSettingsMsg struct {
+	Name                string
+	HeartRateSourceType SourceType
+	HeartRateSource     uint8
+}
+
+// NewDiveSettingsMsg returns a dive_settings FIT message
+// initialized to all-invalid values.
+func NewDiveSettingsMsg() *DiveSettingsMsg {
+	return &DiveSettingsMsg{
+		Name:                "",
+		HeartRateSourceType: 0xFF,
+		HeartRateSource:     0xFF,
+	}
+}
+
+// GetHeartRateSource returns the appropriate HeartRateSource
+// subfield if a matching reference field/value combination is found.
+// If none of the reference field/value combinations are true
+// then the main field is returned.
+func (x *DiveSettingsMsg) GetHeartRateSource() interface{} {
+	switch x.HeartRateSourceType {
+	case SourceTypeAntplus:
+		return AntplusDeviceType(x.HeartRateSource)
+	case SourceTypeLocal:
+		return LocalDeviceType(x.HeartRateSource)
+	default:
+		return x.HeartRateSource
+	}
+}
+
+// DiveAlarmMsg represents the dive_alarm FIT message type.
+type DiveAlarmMsg struct {
+}
+
+// NewDiveAlarmMsg returns a dive_alarm FIT message
+// initialized to all-invalid values.
+func NewDiveAlarmMsg() *DiveAlarmMsg {
+	return &DiveAlarmMsg{}
+}
+
+// DiveGasMsg represents the dive_gas FIT message type.
+type DiveGasMsg struct {
+}
+
+// NewDiveGasMsg returns a dive_gas FIT message
+// initialized to all-invalid values.
+func NewDiveGasMsg() *DiveGasMsg {
+	return &DiveGasMsg{}
 }
 
 // GoalMsg represents the goal FIT message type.
@@ -3339,6 +3391,16 @@ func NewMagnetometerDataMsg() *MagnetometerDataMsg {
 	return &MagnetometerDataMsg{}
 }
 
+// BarometerDataMsg represents the barometer_data FIT message type.
+type BarometerDataMsg struct {
+}
+
+// NewBarometerDataMsg returns a barometer_data FIT message
+// initialized to all-invalid values.
+func NewBarometerDataMsg() *BarometerDataMsg {
+	return &BarometerDataMsg{}
+}
+
 // ThreeDSensorCalibrationMsg represents the three_d_sensor_calibration FIT message type.
 type ThreeDSensorCalibrationMsg struct {
 }
@@ -3347,6 +3409,16 @@ type ThreeDSensorCalibrationMsg struct {
 // initialized to all-invalid values.
 func NewThreeDSensorCalibrationMsg() *ThreeDSensorCalibrationMsg {
 	return &ThreeDSensorCalibrationMsg{}
+}
+
+// OneDSensorCalibrationMsg represents the one_d_sensor_calibration FIT message type.
+type OneDSensorCalibrationMsg struct {
+}
+
+// NewOneDSensorCalibrationMsg returns a one_d_sensor_calibration FIT message
+// initialized to all-invalid values.
+func NewOneDSensorCalibrationMsg() *OneDSensorCalibrationMsg {
+	return &OneDSensorCalibrationMsg{}
 }
 
 // VideoFrameMsg represents the video_frame FIT message type.
@@ -3557,6 +3629,19 @@ type VideoClipMsg struct {
 // initialized to all-invalid values.
 func NewVideoClipMsg() *VideoClipMsg {
 	return &VideoClipMsg{}
+}
+
+// SetMsg represents the set FIT message type.
+type SetMsg struct {
+	WeightDisplayUnit FitBaseUnit
+}
+
+// NewSetMsg returns a set FIT message
+// initialized to all-invalid values.
+func NewSetMsg() *SetMsg {
+	return &SetMsg{
+		WeightDisplayUnit: 0xFFFF,
+	}
 }
 
 // CourseMsg represents the course FIT message type.
@@ -4371,6 +4456,7 @@ type WorkoutStepMsg struct {
 	Intensity             Intensity
 	Notes                 string
 	Equipment             WorkoutEquipment
+	ExerciseCategory      ExerciseCategory
 }
 
 // NewWorkoutStepMsg returns a workout_step FIT message
@@ -4388,6 +4474,7 @@ func NewWorkoutStepMsg() *WorkoutStepMsg {
 		Intensity:             0xFF,
 		Notes:                 "",
 		Equipment:             0xFF,
+		ExerciseCategory:      0xFFFF,
 	}
 }
 
@@ -4409,6 +4496,8 @@ func (x *WorkoutStepMsg) GetDurationValue() interface{} {
 		return uint32(x.DurationValue)
 	case WktStepDurationPowerLessThan, WktStepDurationPowerGreaterThan:
 		return WorkoutPower(x.DurationValue)
+	case WktStepDurationReps:
+		return uint32(x.DurationValue)
 	default:
 		return x.DurationValue
 	}
@@ -4486,6 +4575,25 @@ func (x *WorkoutStepMsg) GetCustomTargetValueHigh() interface{} {
 		return WorkoutPower(x.CustomTargetValueHigh)
 	default:
 		return x.CustomTargetValueHigh
+	}
+}
+
+// ExerciseTitleMsg represents the exercise_title FIT message type.
+type ExerciseTitleMsg struct {
+	MessageIndex     MessageIndex
+	ExerciseCategory ExerciseCategory
+	ExerciseName     uint16
+	WktStepName      []string
+}
+
+// NewExerciseTitleMsg returns a exercise_title FIT message
+// initialized to all-invalid values.
+func NewExerciseTitleMsg() *ExerciseTitleMsg {
+	return &ExerciseTitleMsg{
+		MessageIndex:     0xFFFF,
+		ExerciseCategory: 0xFFFF,
+		ExerciseName:     0xFFFF,
+		WktStepName:      nil,
 	}
 }
 
@@ -4875,6 +4983,16 @@ func (x *HrMsg) expandComponents() {
 	// TODO
 }
 
+// StressLevelMsg represents the stress_level FIT message type.
+type StressLevelMsg struct {
+}
+
+// NewStressLevelMsg returns a stress_level FIT message
+// initialized to all-invalid values.
+func NewStressLevelMsg() *StressLevelMsg {
+	return &StressLevelMsg{}
+}
+
 // MemoGlobMsg represents the memo_glob FIT message type.
 type MemoGlobMsg struct {
 }
@@ -5142,4 +5260,14 @@ func NewDeveloperDataIdMsg() *DeveloperDataIdMsg {
 		DeveloperDataIndex: 0xFF,
 		ApplicationVersion: 0xFFFFFFFF,
 	}
+}
+
+// DiveSummaryMsg represents the dive_summary FIT message type.
+type DiveSummaryMsg struct {
+}
+
+// NewDiveSummaryMsg returns a dive_summary FIT message
+// initialized to all-invalid values.
+func NewDiveSummaryMsg() *DiveSummaryMsg {
+	return &DiveSummaryMsg{}
 }
