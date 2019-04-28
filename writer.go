@@ -129,7 +129,7 @@ func getEncodeMesgDef(mesg reflect.Value, localMesgNum byte) *encodeMesgDef {
 	}
 
 	for i := 0; i < mesg.NumField(); i++ {
-		if mesg.Field(i).Interface() == allInvalid.Field(i).Interface() {
+		if mesg.Field(i).Kind() == reflect.Slice || mesg.Field(i).Interface() == allInvalid.Field(i).Interface() {
 			// Don't encode invalid values
 			continue
 		}

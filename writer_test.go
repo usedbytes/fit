@@ -3,6 +3,10 @@ package fit
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -433,4 +437,51 @@ func TestWriteDefMesg(t *testing.T) {
 	if !bytes.Equal(buf.Bytes(), expect) {
 		t.Errorf("Expected '%v', got '%v'", expect, buf.Bytes())
 	}
+}
+
+func TestDecodeEncodeDecode(t *testing.T) {
+	inName := filepath.Join("testdata", "fitsdk", "Settings.fit")
+	outName := "/tmp/out.fit"
+
+	inData, err := ioutil.ReadFile(inName)
+	if err != nil {
+		t.Fatalf("reading file failed: %v", err)
+	}
+
+	fitFile, err := Decode(bytes.NewReader(inData), WithStdLogger())
+	if err != nil {
+		t.Fatalf("got error, want none; error is: %v", err)
+	}
+
+	fmt.Println(fitFile)
+	fmt.Println(fitFile.settings.UserProfiles[0])
+	fmt.Println(fitFile.settings.HrmProfiles[0])
+
+	outFile, err := os.Create(outName)
+	if err != nil {
+		t.Fatalf("got error, want none; error is: %v", err)
+	}
+
+	err = Encode(outFile, fitFile, binary.BigEndian)
+	if err != nil {
+		t.Fatalf("got error, want none; error is: %v", err)
+	}
+	err = outFile.Close()
+	if err != nil {
+		t.Fatalf("got error, want none; error is: %v", err)
+	}
+
+	inData, err = ioutil.ReadFile(outName)
+	if err != nil {
+		t.Fatalf("reading file failed: %v", err)
+	}
+
+	fitFile, err = Decode(bytes.NewReader(inData), WithStdLogger())
+	if err != nil {
+		t.Fatalf("got error, want none; error is: %v", err)
+	}
+
+	fmt.Println(fitFile)
+	fmt.Println(fitFile.settings.UserProfiles[0])
+	fmt.Println(fitFile.settings.HrmProfiles[0])
 }
