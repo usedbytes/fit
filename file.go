@@ -65,6 +65,9 @@ func (f *File) add(msg reflect.Value) {
 		f.TimestampCorrelation = &tmp
 	case DeviceInfoMsg:
 		f.DeviceInfo = &tmp
+		// Also add to individual files if they support it (e.g.
+		// Monitoring, Activity and others)
+		f.msgAdder.add(msg)
 	default:
 		f.msgAdder.add(msg)
 	}
